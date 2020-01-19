@@ -81,4 +81,5 @@ def run(keyword,page):
     totalDict['data']=get_page(page,keyword,id)
     jsonText=json.dumps(totalDict,ensure_ascii=False)
     return jsonText
+print(run('手机',2))
 

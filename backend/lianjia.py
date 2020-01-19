@@ -102,7 +102,8 @@ def get_page(page, base_url,typeh):
         url = base_url + 'loupan/pg' + str(page) + '/'
     else:
         url = base_url + 'zufang/pg' + str(page) + '/#contentList'
-    settings.lianjiaHeader['Referer'] = url
+    hostName=re.compile('https://(.*?)/').findall(url)[0]
+    settings.lianjiaHeader['Host']=hostName
     response = requests.get(url, headers=settings.lianjiaHeader)
     if response.url == url:
         html = pq(response.text)

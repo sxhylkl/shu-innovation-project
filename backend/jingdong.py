@@ -42,7 +42,7 @@ def get_page(keyword,page):
     url='https://search.jd.com/Search?'
     url=url+'keyword='+quote(keyword)+settings.jindongUnchange
     url=url+'&page='+str(1+2*(page-1))+'&s='+str(1+60*(page-1))+'&click=0'
-    response=requests.get(url,headers=settings.jindongHeadear)
+    response=requests.get(url,headers=settings.jindongHeadear,allow_redirects=False)
     response.encoding='utf-8'
     html1=pq(response.text)
     items = html1('#J_goodsList > ul > li').items()
@@ -92,4 +92,3 @@ def run(keyword,page):
     totalDict['data']=get_page(keyword,page)
     jsonText=json.dumps(totalDict,ensure_ascii=False)
     return jsonText
-# saving.saveFile('C://Users/23560/Desktop/file',run('手机',2))

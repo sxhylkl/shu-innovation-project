@@ -55,7 +55,7 @@ def job():
         if platform == 'liepin':
             return liepin.run(city, job, page)
         if platform == 'baidu':
-            return zhaopinBaidu(city, job, page)
+            return zhaopinBaidu.run(city, job, page)
     except Exception as e:
         return jsonify({"code": 404, "message": str(e)})
 

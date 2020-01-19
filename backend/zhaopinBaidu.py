@@ -109,4 +109,3 @@ def run(city,job,page):
     totalDict['data']=get_page(page=page,city=city,job=job)
     jsonText=json.dumps(totalDict,ensure_ascii=False)
     return jsonText
-

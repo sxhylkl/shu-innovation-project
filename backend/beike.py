@@ -139,7 +139,9 @@ def get_page(page,base_url,typeh):
         urlList = base_url.split('.')
         url = urlList[0] + '.zu' + '.' + urlList[1] + '.' + urlList[2]
         url = url + '/zufang/pg' + str(page) + '/#contentList'
-    response=requests.get(url)
+    hostName=re.compile('https://(.*?)/').findall(url)[0]
+    settings.beikeHeader['Host']=hostName
+    response=requests.get(url,headers=settings.beikeHeader)
     html=pq(response.text)
     if typeh=='二手房':
         return get_details1(html)
