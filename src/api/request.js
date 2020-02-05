@@ -5,7 +5,7 @@ let loading;
 let requestCount = 0
 
 const service = axios.create({
-  baseURL: 'http://47.98.155.211:8080',
+  baseURL: 'http://121.36.63.57:8080',
   timeout: 8000
 })
 
