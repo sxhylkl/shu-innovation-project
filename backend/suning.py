@@ -1,10 +1,19 @@
 from includes import *
 import saving
+def safe_get(index,priceDict):
+    try:
+        return priceDict[index]
+    except:
+        return ''
 def get_details(html):
     allItems = html('div.item-bg>div').items()
     dictList=[]
+    urlLists=[]
+    url='https://ds.suning.com/ds/generalForTile/'
+    count=0
     for item in allItems:
         link = item('div > div.res-img > div.img-block>a').attr('href')
+        count+=1
         if link==None:
             continue
         link = 'https:' + link
@@ -22,35 +31,72 @@ def get_details(html):
         length=18-len(dataStr)
         for i in range(length):
             dataStr='0'+dataStr
-        url='https://ds.suning.com/ds/generalForTile/'+dataStr+'____'+threegroup_id+'_'+brand_id+'-010-2-0000000000-1--ds0000000003206.jsonp?callback=ds0000000003206'
-        response=requests.get(url)
-        text=response.text
-        jsonText=text.replace('ds0000000003206(','').replace(');','')
-        jsonText=json.loads(jsonText)
-        price=jsonText['rs'][0]['price']
-        if price!='':
-            price+='元'
-        tags=jsonText['rs'][0]['promotionLable']
-        Info=jsonText['rs'][0]['promotionList']
-        for key in Info:
-            tags+=' '+key['simple']
+        finId = link.split('/')[3]
+        if count%5==0:
+            url = url + dataStr + '__2_' +finId+'_'+ threegroup_id + '_' + brand_id + '-010-2-' + str(
+                finId) + '-1--ds0000000003206.jsonp?callback=ds0000000003206'
+            urlLists.append(url)
+            url='https://ds.suning.com/ds/generalForTile/'
+        else:
+            url=url+dataStr+'__2_'+finId+'_'+threegroup_id+'_'+brand_id+','
         commitNum=item('div.res-info > div.evaluate-old.clearfix > div>a').text()
         shop=item('div.res-info > div.store-stock > a').text()
         dict={
             'link':link,
             'title':title,
-            'price':price,
+            #'price':price,
             'commitNum':commitNum,
             'shop':shop,
-            'tags':tags
+            #'tags':tags
         }
         dictList.append(dict)
+    count=0
+    for i in range(len(urlLists)):
+        response = requests.get(urlLists[i])
+        text = response.text
+        jsonText = text.replace('ds0000000003206(', '').replace(');', '')
+        jsonText = json.loads(jsonText)
+        rs = safe_get('rs', jsonText)
+        for i in range(len(rs)):
+            temp = safe_get(i, rs)
+            price = safe_get('price', temp)
+            if price != '':
+                price += '元'
+            tags = temp['promotionLable']
+            Info = temp['promotionList']
+            for key in Info:
+                tags += ' ' + key['simple']
+            dictList[count]['price']=price
+            dictList[count]['tags']=tags
+            count+=1
     return dictList
 def get_page(page,keyword,id):
-    # print('正在爬取第'+str(page)+'页')
     totalList=[]
     for paging in range(4):
-        url='https://search.suning.com/emall/searchV1Product.do?keyword='+quote(keyword)+'&ci='+id+'&pg=01&cp=0&il='+str(page-1)+'&st=0&iy=0&isDoufu=1&isNoResult=0&n=1&sesab=ACAABAABCAAA&id=IDENTIFYING&cc=010&paging='+str(paging)+'&sub=1&jzq=13460'
+        param={
+            'keyword':quote(keyword),
+            'ci':'0',
+            'pg':'01',
+            'cp':str(page-1),
+            'li':'0',
+            'st':'0',
+            'iy':'0',
+            'adNumber':'2',
+            'isNoResult':'0',
+            'n':'1',
+            'sesab':'ACAABAABCAAA',
+            'id':'IDENTIFYING',
+            'cc':'010',
+            'paging':str(paging),
+            'sub':'1',
+            'jzq':str(id)
+        }
+        url='https://search.suning.com/emall/searchV1Product.do?'
+        for k in param:
+            if k!='jzq':
+                url+=k+'='+param[k]+'&'
+            else:
+                url += k + '=' + param[k]
         response=requests.get(url)
         html=pq(response.text)
         tempList=get_details(html)
@@ -77,8 +123,8 @@ def run(keyword,page):
     totalDict['keyword']=keyword
     totalDict['pages']=50
     response = requests.get('https://search.suning.com/'+quote(keyword)+'/')
-    id = re.compile('\n"categoryId": (.*),').findall(response.text)[0]
+    html=pq(response.text)
+    id=html('#totalCount').attr('value')
     totalDict['data']=get_page(page,keyword,id)
     jsonText=json.dumps(totalDict,ensure_ascii=False)
     return jsonText
-
